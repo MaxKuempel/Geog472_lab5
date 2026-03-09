@@ -63,7 +63,7 @@ function PointCountChoropleth(){
        countries.features[i].properties.count = MineralIndWithin.features.length;
 
        // also calculate area while we are at it
-       countries.features[i].properties.area = turf.area(countries.features[i]) / 100000000
+       countries.features[i].properties.area = turf.area(countries.features[i]) / 10000000000
        countries.features[i].properties.ind_per_area = countries.features[i].properties.count / countries.features[i].properties.area
 
        //and centroids
@@ -102,11 +102,11 @@ legend.addTo(map)
 }
 //normalized area
 
-function ColorScheme_area(value){
-return value > 0.004 ? "#7a0177":
-        value > 0.0004 ? "#c51b8a":
-        value > 0.00004 ? "#f768a1":
-        value > 0.000004 ? "#fbb4b9":
+function ColorScheme_area(value){ //per 10,000 sq km
+return value >  10? "#7a0177":
+        value > 5 ? "#c51b8a":
+        value > 2.5 ? "#f768a1":
+        value > 1.25 ? "#fbb4b9":
         value > 0 ? "#feebe2":
         "#999999"
 
@@ -128,11 +128,12 @@ function RenderChoroplethNormalized(){
 }).addTo(Choropleth_group_normalized)
 }
 
-// Proportional symbols
+
+
 function RenderProportional(){
     for (let i = 0; i < countries.features.length; i++){
-        L.circle(countries.features[i].properties.centroid,
-            {radius: 100}
+        L.circleMarker((countries.features[i].properties.centroid.geometry.coordinates).reverse(),
+            {radius: countries.features[i].properties.count / 5}
         ).addTo(Proportional)
     }
     
