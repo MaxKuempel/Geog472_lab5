@@ -22,13 +22,13 @@ catch(error) {
 
 //the map
 var map = L.map('map').setView([0,0], 2);
-var Stadia_AlidadeSmoothDark = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.{ext}', {
-	minZoom: 0,
+var OpenStreetMap_HOT = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
 	maxZoom: 19,
-	attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-	ext: 'png'
-}); // leaflet provider tiles: Stadia.AlidadeSmoothDark
-Stadia_AlidadeSmoothDark.addTo(map);
+	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">Humanitarian OpenStreetMap Team</a> hosted by <a href="https://openstreetmap.fr/" target="_blank">OpenStreetMap France</a>'
+});
+OpenStreetMap_HOT.addTo(map);
+
+
 //Layer groups
 var Choropleth_group = L.layerGroup();
 var Choropleth_group_normalized = L.layerGroup();
@@ -47,7 +47,7 @@ return value > 300 ? "#7a0177":
 function StyleChoropleth(feature) {
 return{
     fillColor: ColorScheme_Choropleth(feature.properties.count),
-    fillOpacity: 0.7, 
+    fillOpacity: 1, 
     weight: 0.5,
     opacity:1,
     color: 'black' 
@@ -71,6 +71,7 @@ function PointCountChoropleth(){
     }
 }
 
+var legend_Choropleth;
 function RenderChoropleth (){
 
     L.geoJSON(countries, {
@@ -78,9 +79,9 @@ function RenderChoropleth (){
 }).addTo(Choropleth_group)
 
 //legend//
-var legend = L.control({position: 'topright'}); //Taken from choropleth tutorial https://leafletjs.com/examples/choropleth/
+legend_Choropleth = L.control({position: 'topright'}); //Taken from choropleth tutorial https://leafletjs.com/examples/choropleth/
 
-legend.onAdd = function (map) {
+legend_Choropleth.onAdd = function (map) {
 
     var div = L.DomUtil.create('div', 'info legend'),
         mineralprojects = [0,40,60,100,300],
@@ -96,7 +97,7 @@ legend.onAdd = function (map) {
 
     return div;
 };
-legend.addTo(map)
+
 
 
 }
@@ -106,7 +107,7 @@ function ColorScheme_area(value){ //per 10,000 sq km
 return value >  10? "#7a0177":
         value > 5 ? "#c51b8a":
         value > 2.5 ? "#f768a1":
-        value > 1.25 ? "#fbb4b9":
+        value > 1 ? "#fbb4b9":
         value > 0 ? "#feebe2":
         "#999999"
 
@@ -115,7 +116,7 @@ return value >  10? "#7a0177":
 function StyleChoropleth_area(feature) {
 return{
     fillColor: ColorScheme_area(feature.properties.ind_per_area),
-    fillOpacity: 0.7, 
+    fillOpacity: 1, 
     weight: 0.5,
     opacity:1,
     color: 'black' 
@@ -126,6 +127,29 @@ function RenderChoroplethNormalized(){
      L.geoJSON(countries, {
     style: StyleChoropleth_area
 }).addTo(Choropleth_group_normalized)
+
+
+legend_Choropleth_N = L.control({position: 'topright'}); //Taken from choropleth tutorial https://leafletjs.com/examples/choropleth/
+
+legend_Choropleth_N.onAdd = function (map) {
+    
+    var div = L.DomUtil.create('div', 'info legend'),
+        mineralprojects = [0,1,2.5,5,10],
+        labels = [];
+
+    div.innerHTML += '<strong>Legend </strong> <br>'
+    // loop through our density intervals and generate a label with a colored square for each interval
+    for (var i = 0; i < mineralprojects.length; i++) {
+        div.innerHTML +=
+            '<i style="background:' + ColorScheme_area(mineralprojects[i] + 1) + '"></i> ' +
+            mineralprojects[i] + (mineralprojects[i + 1] ? '&ndash;' + mineralprojects[i + 1] + " Mineral projects / 10,000 sq km"+'<br>' : '+ Mineral projects / 10,000 sq km'); //same choropleth tutorial https://leafletjs.com/examples/choropleth/
+    }
+
+    return div;
+};
+
+
+
 }
 
 
@@ -137,24 +161,50 @@ function RenderProportional(){
         ).addTo(Proportional)
     }
     
+    legend_proportional = L.control({position: 'topright'}); //Taken from choropleth tutorial https://leafletjs.com/examples/choropleth/
+
+legend_proportional.onAdd = function (map) {
+    
+    var div = L.DomUtil.create('div', 'info legend'),
+        //mineralprojects = [0,0.5,2.5,5,10],
+        labels = [];
+
+    div.innerHTML += '<strong>Legend </strong> <br>'
+    // loop through our density intervals and generate a label with a colored square for each interval
+    for (var i = 0; i < mineralprojects.length; i++) {
+       div.innerHTML += '<svg height = "20" width = "20"> <circle /> </svg>'
+     }
+
+    return div;
+};
+
 }
 
 function LayerSwitcher(){
     selected_layer = document.querySelector('input[name="selector"]:checked').value
     if (selected_layer == "Choropleth"){
+        map.removeControl(legend_Choropleth_N)
+        map.removeControl(legend_proportional)
         map.removeLayer(Choropleth_group_normalized)
         map.removeLayer(Proportional)
         Choropleth_group.addTo(map)
+        legend_Choropleth.addTo(map)
     }
     else if (selected_layer == "Normalized") {
         map.removeLayer(Choropleth_group)
+        map.removeControl(legend_proportional)
         map.removeLayer(Proportional)
+        map.removeControl(legend_Choropleth)
         Choropleth_group_normalized.addTo(map)
+        legend_Choropleth_N.addTo(map)
     }
     else if (selected_layer == "Proportional Symbols") {
+        map.removeControl(legend_Choropleth)
+        map.removeControl(legend_Choropleth_N)
         map.removeLayer(Choropleth_group)
         map.removeLayer(Choropleth_group_normalized)
         Proportional.addTo(map)
+        legend_proportional.addTo(map)
     }
     else {
         console.log("no layer selected somehow")

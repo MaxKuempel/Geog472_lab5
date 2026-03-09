@@ -12,12 +12,15 @@
     </head>
 
     <body>
+    <h1>Mineral Industries of Select Countries in the Indo-Pacific</h1>
+    <p> Countries selected are: Bangladesh, Bhutan, Brunei, Burma, Fiji, Malaysia, Mongolia, Nauru, New Caledonia, New Zealand, Papua New Guinea, Philippines, Singapore, Solomon Islands, South Korea (Republic of Korea), Sri Lanka, Taiwan, Timor-Leste, and Vietnam. </p>
         <p>Data from: https://www.sciencebase.gov/catalog/item/65caa1aed34ef4b119cb3427
             Country geojson from: https://geojson-maps.kyd.au/ 
         </p> 
     <script type="text/javascript" src="lib/leaflet/dist/leaflet-src.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js" defer></script>
      <script  type="text/javascript" src = "scripts/script.js" defer> </script>
+     
         <p>Select layer to display</p>
             <input type="radio" id="Choropleth" name="selector" value="Choropleth" onchange="LayerSwitcher()">
                 <label for="Choropleth">Choropleth</label><br>
@@ -25,5 +28,6 @@
                 <label for="Normalized">Normalized Choropleth</label><br>
             <input type="radio" id="Proportional Symbols" name="selector" value="Proportional Symbols" onchange="LayerSwitcher()">
                 <label for="Proportional Symbols">Proportional Symbols</label>
+                
      <div id = "map"></div>
     </body>
