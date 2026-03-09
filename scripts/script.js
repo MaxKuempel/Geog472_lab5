@@ -21,7 +21,7 @@ catch(error) {
 }
 
 //the map
-var map = L.map('map').setView([0,0], 2);
+var map = L.map('map').setView([14,108], 2);
 var OpenStreetMap_HOT = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
 	maxZoom: 19,
 	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">Humanitarian OpenStreetMap Team</a> hosted by <a href="https://openstreetmap.fr/" target="_blank">OpenStreetMap France</a>'
@@ -166,13 +166,14 @@ function RenderProportional(){
 legend_proportional.onAdd = function (map) {
     
     var div = L.DomUtil.create('div', 'info legend'),
-        //mineralprojects = [0,0.5,2.5,5,10],
+        mineralprojects = [10,50,100],
         labels = [];
 
     div.innerHTML += '<strong>Legend </strong> <br>'
     // loop through our density intervals and generate a label with a colored square for each interval
     for (var i = 0; i < mineralprojects.length; i++) {
-       div.innerHTML += '<svg height = "20" width = "20"> <circle /> </svg>'
+       div.innerHTML += "coming soon! " + mineralprojects[i] + " "
+       '/n'
      }
 
     return div;
