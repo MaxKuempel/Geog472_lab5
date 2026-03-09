@@ -1,26 +1,25 @@
-let mineralind;
-let vorP;
-function FetchMineralInd(){
-    fetch("data/INDOPAC_Mineral_facilities.geojson")
-    .then(response => response.json())
-    .then(data=> {
-        console.log(data);
-        mineralind = data;  
-        vorP = turf.voronoi(mineralind);
-        L.geoJSON(vorP).addTo(map);
-    }
-    )
-}
+
 let countries;
-function FetchCountries(){
-    fetch("data/World_Countries.geojson")
-       .then(response => response.json())
-    .then(data=> {
-        console.log(data);
-        countries = data
-        L.geoJSON(data).addTo(map);
-})
+let mineralind;
+
+async function DisplayChoropleth() { //google AI overview
+    try {
+        const [countries_r, mineral_ind_r] = await Promise.all([
+      fetch("data/World_Countries_Fixed.geojson"),
+      fetch("data/INDOPAC_Mineral_facilities.geojson")
+    ]);
+    countries = await countries_r.json();
+    mineralind = await mineral_ind_r.json();
+    PointCountChoropleth();
+    RenderChoropleth();
+    RenderChoroplethNormalized();
+    RenderProportional();
 }
+catch(error) {
+    console.error("Error: ", error);
+}
+}
+
 //the map
 var map = L.map('map').setView([0,0], 2);
 var Stadia_AlidadeSmoothDark = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.{ext}', {
@@ -30,8 +29,137 @@ var Stadia_AlidadeSmoothDark = L.tileLayer('https://tiles.stadiamaps.com/tiles/a
 	ext: 'png'
 }); // leaflet provider tiles: Stadia.AlidadeSmoothDark
 Stadia_AlidadeSmoothDark.addTo(map);
+//Layer groups
+var Choropleth_group = L.layerGroup();
+var Choropleth_group_normalized = L.layerGroup();
+var Proportional = L.layerGroup();
+
+function ColorScheme_Choropleth(value){
+return value > 300 ? "#7a0177":
+        value > 100 ? "#c51b8a":
+        value > 60 ? "#f768a1":
+        value > 40 ? "#fbb4b9":
+        value > 0 ? "#feebe2":
+        "#999999"
+
+}
+
+function StyleChoropleth(feature) {
+return{
+    fillColor: ColorScheme_Choropleth(feature.properties.count),
+    fillOpacity: 0.7, 
+    weight: 0.5,
+    opacity:1,
+    color: 'black' 
+}   
+}
+
+
+function PointCountChoropleth(){
+    let MineralIndWithin;
+    for (let i = 0; i < countries.features.length; i++){
+       MineralIndWithin = turf.pointsWithinPolygon(mineralind, countries.features[i])
+
+       countries.features[i].properties.count = MineralIndWithin.features.length;
+
+       // also calculate area while we are at it
+       countries.features[i].properties.area = turf.area(countries.features[i]) / 100000000
+       countries.features[i].properties.ind_per_area = countries.features[i].properties.count / countries.features[i].properties.area
+
+       //and centroids
+       countries.features[i].properties.centroid = turf.centroid(countries.features[i])
+    }
+}
+
+function RenderChoropleth (){
+
+    L.geoJSON(countries, {
+    style: StyleChoropleth
+}).addTo(Choropleth_group)
+
+//legend//
+var legend = L.control({position: 'topright'}); //Taken from choropleth tutorial https://leafletjs.com/examples/choropleth/
+
+legend.onAdd = function (map) {
+
+    var div = L.DomUtil.create('div', 'info legend'),
+        mineralprojects = [0,40,60,100,300],
+        labels = [];
+
+    div.innerHTML += '<strong>Legend </strong> <br>'
+    // loop through our density intervals and generate a label with a colored square for each interval
+    for (var i = 0; i < mineralprojects.length; i++) {
+        div.innerHTML +=
+            '<i style="background:' + ColorScheme_Choropleth(mineralprojects[i] + 1) + '"></i> ' +
+            mineralprojects[i] + (mineralprojects[i + 1] ? '&ndash;' + mineralprojects[i + 1] + " Mineral projects"+'<br>' : '+ Mineral projects'); //same choropleth tutorial https://leafletjs.com/examples/choropleth/
+    }
+
+    return div;
+};
+legend.addTo(map)
+
+
+}
+//normalized area
+
+function ColorScheme_area(value){
+return value > 0.004 ? "#7a0177":
+        value > 0.0004 ? "#c51b8a":
+        value > 0.00004 ? "#f768a1":
+        value > 0.000004 ? "#fbb4b9":
+        value > 0 ? "#feebe2":
+        "#999999"
+
+}
+
+function StyleChoropleth_area(feature) {
+return{
+    fillColor: ColorScheme_area(feature.properties.ind_per_area),
+    fillOpacity: 0.7, 
+    weight: 0.5,
+    opacity:1,
+    color: 'black' 
+}   
+}
+
+function RenderChoroplethNormalized(){
+     L.geoJSON(countries, {
+    style: StyleChoropleth_area
+}).addTo(Choropleth_group_normalized)
+}
+
+// Proportional symbols
+function RenderProportional(){
+    for (let i = 0; i < countries.features.length; i++){
+        L.circle(countries.features[i].properties.centroid,
+            {radius: 100}
+        ).addTo(Proportional)
+    }
+    
+}
+
+function LayerSwitcher(){
+    selected_layer = document.querySelector('input[name="selector"]:checked').value
+    if (selected_layer == "Choropleth"){
+        map.removeLayer(Choropleth_group_normalized)
+        map.removeLayer(Proportional)
+        Choropleth_group.addTo(map)
+    }
+    else if (selected_layer == "Normalized") {
+        map.removeLayer(Choropleth_group)
+        map.removeLayer(Proportional)
+        Choropleth_group_normalized.addTo(map)
+    }
+    else if (selected_layer == "Proportional Symbols") {
+        map.removeLayer(Choropleth_group)
+        map.removeLayer(Choropleth_group_normalized)
+        Proportional.addTo(map)
+    }
+    else {
+        console.log("no layer selected somehow")
+    }
+}
 
 window.onload = function(){
-    FetchMineralInd();
-    FetchCountries();
+    DisplayChoropleth();
 }

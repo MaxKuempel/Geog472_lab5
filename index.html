@@ -12,9 +12,18 @@
     </head>
 
     <body>
-        <p>Data from: https://www.sciencebase.gov/catalog/item/65caa1aed34ef4b119cb3427</p> 
+        <p>Data from: https://www.sciencebase.gov/catalog/item/65caa1aed34ef4b119cb3427
+            Country geojson from: https://geojson-maps.kyd.au/ 
+        </p> 
     <script type="text/javascript" src="lib/leaflet/dist/leaflet-src.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js" defer></script>
      <script  type="text/javascript" src = "scripts/script.js" defer> </script>
+        <p>Select layer to display</p>
+            <input type="radio" id="Choropleth" name="selector" value="Choropleth" onchange="LayerSwitcher()">
+                <label for="Choropleth">Choropleth</label><br>
+            <input type="radio" id="Normalized" name="selector" value="Normalized" onchange="LayerSwitcher()">
+                <label for="Normalized">Normalized Choropleth</label><br>
+            <input type="radio" id="Proportional Symbols" name="selector" value="Proportional Symbols" onchange="LayerSwitcher()">
+                <label for="Proportional Symbols">Proportional Symbols</label>
      <div id = "map"></div>
     </body>
